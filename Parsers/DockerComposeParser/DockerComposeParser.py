@@ -19,7 +19,7 @@ def parse_docker_compose_to_kathara(docker_compose_file):
         kathara_service = {}
 
         # Имя сервиса
-        kathara_service['name'] = service_name
+        kathara_service['name'] = service_name.replace('-', '')
 
         kathara_service['build'] = service_data.get('build', None)
 
@@ -64,7 +64,7 @@ def gen_startup_dns(services):
         f.write(f"ip address add {ip_addresses[1]}{ip_mask} dev eth0\n")
         dns_conf_command = f"echo -e \"no-dhcp-interface=\\ninterface=lo0\\ninterface=eth0\\nserver=8.8.8.8\\n"
         for service in services:
-            dns_conf_command += f"address/{service['name']}/{service['ip']}\\n"
+            dns_conf_command += f"address=/{service['name']}/{service['ip']}\\n"
         dns_conf_command += "\" > /etc/dnsmasq.conf\n"
         f.write(dns_conf_command)
         f.write("dnsmasq --conf-file=/etc/dnsmasq.conf -d")
@@ -96,7 +96,8 @@ def generate_kathara_config(docker_compose_file, output_file):
 # Использование программы
 os.makedirs(folder_path, exist_ok=True)
 docker_compose_file = 'docker-compose.yml'
-output_file = f'{folder_path}/kathara_config.conf'
+output_file = f'{folder_path}/lab.conf'
 
 generate_kathara_config(docker_compose_file, output_file)
 print(f"Kathara конфигурация была сохранена в {output_file}")
+
