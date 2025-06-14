@@ -1,0 +1,25 @@
+ip addr add 100.100.100.2/24 dev eth0
+cd program
+./nikto.pl -h 100.100.100.1:5001 -ask no -output result.json
+curl -k -X POST "http://172.17.0.1:8080/api/v2/reimport-scan/" \
+        -H 'accept: application/json' \
+        -H "Content-Type: multipart/form-data; boundary=---------------------------464373124211502031057734416" \
+        -H "Authorization: Token 4ea33f9a9cfa5b116ad2eeae07a09e94cc328a8d" \
+        -F 'active=true' \
+        -F 'do_not_reactivate=false' \
+        -F 'verified=true' \
+        -F 'close_old_findings=true' \
+        -F "test_title=FVWA" \
+        -F "engagement_name=Test" \
+        -F 'deduplication_on_engagement=true' \
+        -F 'push_to_jira=false' \
+        -F 'minimum_severity=Info' \
+        -F 'close_old_findings_product_scope=false' \
+        -F "scan_date=$(date +"%Y-%m-%d")" \
+        -F 'create_finding_groups_for_all_findings=true' \
+        -F 'group_by=component_name' \
+        -F 'apply_tags_to_findings=true' \
+        -F "product_name=FVWA" \
+        -F "file=@./result.json;type=application/json" \
+        -F 'auto_create_context=true' \
+        -F "scan_type=Nikto Scan" \
