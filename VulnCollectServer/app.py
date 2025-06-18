@@ -36,12 +36,27 @@ def upload(tool_name):
             return jsonify({"error": msg}), 400
 
         # Пересылаем в DefectDojo
-        files = {'file': (file.filename, file.stream, file.mimetype)}
+        files = {
+            "file": (file.filename, file.stream, "application/json")  # или file.mimetype
+            }
         data = {
-            "scan_type": DEFECTDOJO_SCAN_TYPE,
-            "engagement": DEFECTDOJO_ENGAGEMENT_ID,
             "active": "true",
-            "verified": "false",
+            "do_not_reactivate": "false",
+            "verified": "true",
+            "close_old_findings": "true",
+            "test_title": "FVWA",
+            "engagement_name": "Test",
+            "deduplication_on_engagement": "true",
+            "push_to_jira": "false",
+            "minimum_severity": "Info",
+            "close_old_findings_product_scope": "false",
+            "scan_date": datetime.now().strftime("%Y-%m-%d"),
+            "create_finding_groups_for_all_findings": "true",
+            "group_by": "component_name",
+            "apply_tags_to_findings": "true",
+            "product_name": "FVWA",
+            "auto_create_context": "true",
+            "scan_type": DEFECTDOJO_SCAN_TYPE
         }
         headers = {
             "Authorization": f"Token {DEFECTDOJO_API_KEY}"
