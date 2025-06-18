@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import os
+from datetime import datetime
 import requests
 import traceback
 from config import DEFECTDOJO_URL, DEFECTDOJO_API_KEY, DEFECTDOJO_ENGAGEMENT_ID, DEFECTDOJO_SCAN_TYPE, LIST_OF_TOOLS
