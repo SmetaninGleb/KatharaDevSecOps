@@ -75,4 +75,19 @@ def logs():
     return jsonify(log_entries)
 
 if __name__ == "__main__":
+    # Логируем конфиг один раз при старте
+    config_log = {
+        "message": "Configuration loaded",
+        "DEFECTDOJO_IP": os.getenv("DEFECTDOJO_IP", "localhost"),
+        "DEFECTDOJO_PORT": os.getenv("DEFECTDOJO_PORT", "8080"),
+        "DEFECTDOJO_URL": DEFECTDOJO_URL,
+        "DEFECTDOJO_API_KEY": "***" if DEFECTDOJO_API_KEY else "(empty)",
+        "DEFECTDOJO_ENGAGEMENT_ID": DEFECTDOJO_ENGAGEMENT_ID,
+        "DEFECTDOJO_SCAN_TYPE": DEFECTDOJO_SCAN_TYPE,
+        "LIST_OF_TOOLS": LIST_OF_TOOLS,
+    }
+
+    log_entries.append(config_log)
+    print(f"LOGGED CONFIG: {config_log}")
+    
     app.run(host="0.0.0.0", port=5000)
