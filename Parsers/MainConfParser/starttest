@@ -1,0 +1,1 @@
+python parse_lab.py test_scenario.yaml --output test_output
