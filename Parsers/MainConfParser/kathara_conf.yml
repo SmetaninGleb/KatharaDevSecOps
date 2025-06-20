@@ -1,0 +1,30 @@
+lab:
+  LAB_NAME: "MultiToolTest"
+  LAB_DESCRIPTION: "Test multiple analysis tools inside Kathara"
+  LAB_AUTHOR: "DevOps"
+  LAB_EMAIL: "devops@example.com"
+  LAB_VERSION: "1.0"
+  LAB_WEB: "https://example.com"
+
+devices:
+  app:
+    image: nginx:alpine
+    port: "8080:80"
+    interfaces:
+      - network: lan
+
+  nikto_scan:
+    image: katharasec/nikto
+    interfaces:
+      - network: lan
+    template: nikto
+    ip: 192.168.100.11/24
+    target_ip: 192.168.100.10
+    target_port: 80
+    product_name: "TestApp"
+    collector_ip: 192.168.100.254
+    collector_port: 5000
+    tool_id: nikto_app
+
+dependencies:
+  nikto_scan: [app]

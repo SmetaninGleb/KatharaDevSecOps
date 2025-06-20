@@ -79,17 +79,28 @@ def write_startup_file(dev_name, dev, templates_dir, out_dir):
 
     if "custom_startup" in dev:
         with open(startup_path, "w") as f:
+            print(f"\nФайл {startup_path}:\n\n{dev["custom_startup"]}\n")
             f.write(dev["custom_startup"])
     elif "startup_file" in dev:
         from shutil import copyfile
+        print(f"\nФайл {startup_path}:\n\n{dev["startup_file"]}\n")
         copyfile(dev["startup_file"], startup_path)
     elif "template" in dev:
         env = Environment(loader=FileSystemLoader(templates_dir))
         from datetime import datetime
         env.globals["now"] = datetime.now
         template = env.get_template(f"{dev['template']}.startup.j2")
+        print(f"\nФайл {startup_path}:\n\n{template.render(**dev)}\n")
         with open(startup_path, "w") as f:
             f.write(template.render(**dev))
+
+def generate_tool_id_list(devices):
+    lines = []
+    for dev_name, dev in devices.items():
+        if "tool_id" in dev:
+            lines.append(dev["tool_id"])
+
+    return "\n".join(lines)
 
 def main(config_path, output_dir="kathara_conf", templates_dir="templates"):
     os.makedirs(output_dir, exist_ok=True)
@@ -102,16 +113,23 @@ def main(config_path, output_dir="kathara_conf", templates_dir="templates"):
     dependencies = config.get("dependencies", {})
 
     lab_conf = generate_lab_conf(meta, devices)
+    print(f"\nФайл lab.conf:\n\n{lab_conf}\n")
     with open(os.path.join(output_dir, "lab.conf"), "w") as f:
         f.write(lab_conf)
 
     if dependencies:
         lab_dep = generate_lab_dep(dependencies)
+        print(f"\nФайл lab.deb:\n\n{lab_dep}\n")
         with open(os.path.join(output_dir, "lab.dep"), "w") as f:
             f.write(lab_dep)
 
     for dev_name, dev in devices.items():
         write_startup_file(dev_name, dev, templates_dir, output_dir)
+
+    tool_ids = generate_tool_id_list(devices)
+    print(f"\nФайл tool_ids.txt:\n\n{tool_ids}\n")
+    with open(os.path.join(output_dir, "tool_ids.txt"), "w") as f:
+        f.write(tool_ids)
 
 if __name__ == "__main__":
     import argparse

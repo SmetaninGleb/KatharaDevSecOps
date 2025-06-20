@@ -1,0 +1,8 @@
+ip addr add {{ ip }} dev eth0
+cd /program
+nmap -oX result.xml {{ target_ip }} -p {{ target_port }}
+
+curl -X POST "http://{{ collector_ip }}:{{ collector_port }}/upload/nmap" \
+  -H "X-DefectDojo-Product: {{ product_name }}" \
+  -H "Authorization: Token {{ token }}" \
+  -F "file=@result.xml"

@@ -1,11 +1,7 @@
 ip addr add {{ ip }} dev eth0
-cd {{ workdir }}
-./nikto.pl -h {{ target_host }}:{{ target_port }} -ask no -output result.json
-curl -k -X POST "{{ dojo_url }}/api/v2/reimport-scan/" \
-  -H "accept: application/json" \
-  -H "Content-Type: multipart/form-data" \
-  -H "Authorization: Token {{ dojo_token }}" \
-  -F "scan_date={{ scan_date }}" \
-  -F "scan_type=Nikto Scan" \
-  -F "product_name={{ product_name }}" \
-  -F "file=@./result.json;type=application/json"
+cd /program
+./nikto.pl -h {{ target_ip }}:{{ target_port }} -ask no -output result.json
+
+curl -X POST "http://{{ collector_ip }}:{{ collector_port }}/upload/{{tool_id}}" \
+  -H "X-DefectDojo-Product: {{ product_name }}" \
+  -F "file=@result.json"
