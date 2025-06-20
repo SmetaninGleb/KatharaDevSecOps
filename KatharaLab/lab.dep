@@ -1,2 +1,4 @@
 nikto: fvwa
 zap: fvwa
+nmap: fvwa
+wapiti: fvwa

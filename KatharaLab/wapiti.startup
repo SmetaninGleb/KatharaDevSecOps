@@ -1,0 +1,32 @@
+ip addr add 100.100.100.5/24 dev eth0
+wapiti -u http://100.100.100.1:5001 -f xml -o ./new_result.xml
+echo '#!/bin/bash 
+INPUT_FILE="$1" 
+OUTPUT_FILE="$2" 
+shift 2 
+PATTERNS=() 
+for pattern in "$@"; do 
+	PATTERNS+=("-e" "$pattern") 
+done 
+grep -vE "${PATTERNS[@]}" "$INPUT_FILE" > "$OUTPUT_FILE"' > xml-fix.sh
+bash xml-fix.sh new_result.xml result.xml '="auth"' '="crawledPages"'
+curl -k -X POST "http://172.17.0.1:8080/api/v2/reimport-scan/" \
+        -H "Authorization: Token 4ea33f9a9cfa5b116ad2eeae07a09e94cc328a8d" \
+        -F 'active=true' \
+        -F 'do_not_reactivate=false' \
+        -F 'verified=true' \
+        -F 'close_old_findings=true' \
+        -F "test_title=FVWA" \
+        -F "engagement_name=Test" \
+        -F 'deduplication_on_engagement=true' \
+        -F 'push_to_jira=false' \
+        -F 'minimum_severity=Info' \
+        -F 'close_old_findings_product_scope=false' \
+        -F "scan_date=$(date +"%Y-%m-%d")" \
+        -F 'create_finding_groups_for_all_findings=true' \
+        -F 'group_by=component_name' \
+        -F 'apply_tags_to_findings=true' \
+        -F "product_name=FVWA" \
+        -F "file=@./result.xml;type=application/xml" \
+        -F 'auto_create_context=true' \
+        -F "scan_type=Wapiti Scan" \
