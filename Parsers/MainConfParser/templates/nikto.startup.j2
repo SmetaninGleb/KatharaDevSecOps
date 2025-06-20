@@ -1,0 +1,7 @@
+ip addr add {{ ip }} dev eth0
+cd /program
+./nikto.pl -h {{ target_ip }}:{{ target_port }} -ask no -output result.json
+
+curl -X POST "http://{{ collector_ip }}:{{ collector_port }}/upload/{{tool_id}}" \
+  -H "X-DefectDojo-Product: {{ product_name }}" \
+  -F "file=@result.json"
