@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import os
 import json
 import requests
+import traceback
 
 app = Flask(__name__)
 
@@ -88,6 +89,15 @@ def upload(tool_id):
         #     "verified": True
         # }
         # files = {"file": (file.filename, file.stream, file.mimetype)}
+        
+        
+        # DEBUG LOG — перед отправкой
+        log_entries.append({
+            "message": "Preparing upload to DefectDojo",
+            "form_data": form_data,
+            "file_keys": list(files.keys())
+        })
+
         dojo_url = f"{server_config['defectdojo']['ip']}:{server_config['defectdojo']['port']}"
         defectdojo_upload_url = dojo_url.rstrip("/") + "/import-scan/"
 
@@ -97,7 +107,11 @@ def upload(tool_id):
             received_tools.add(tool_id)
             return jsonify({"status": "received"}), 200
         else:
-            log_error("Upload failed", resp.text)
+            log_entries.append({
+                "message": "Upload failed",
+                "status_code": resp.status_code,
+                "response_text": resp.text
+            })
             return jsonify({"error": "Upload failed"}), 500
 
     except Exception as e:
