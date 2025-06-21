@@ -104,7 +104,7 @@ def upload(tool_id):
         })
 
         dojo_url = f"http://{server_config['defectdojo']['ip']}:{server_config['defectdojo']['port']}"
-        defectdojo_upload_url = dojo_url.rstrip("/") + "/import-scan/"
+        defectdojo_upload_url = dojo_url.rstrip("/") + "/api/v2/import-scan/"
 
         resp = requests.post(defectdojo_upload_url, headers=headers, data=form_data, files=files)
 
