@@ -48,7 +48,7 @@ def ensure_product_exists(name):
     data = {
         "name": name,
         "description": "Created automatically",
-        "prod_type": 0
+        "prod_type": 1
     }
     create_resp = requests.post(url, headers=headers, json=data)
     if create_resp.status_code == 201:
