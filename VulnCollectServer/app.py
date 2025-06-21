@@ -6,22 +6,29 @@ import requests
 app = Flask(__name__)
 
 server_config = {
-    "tools": set(),
-    "products": {},
-    "defectdojo": {}
+    "tools": [],
+    "defectdojo": {
+        "ip": "",
+        "port": "",
+        "token": "",
+    }
 }
 received_tools = set()
 log_entries = []
 
-def log_error(message, error=None):
-    log_entries.append({"error": message, "details": str(error)})
+def log_error(message, exception=None):
+    """Логирует ошибку в память"""
+    entry = {"message": message}
+    if exception:
+        entry["exception"] = traceback.format_exc()
+    log_entries.append(entry)
+    print(f"LOGGED ERROR: {entry}")
 
 @app.route("/configure", methods=["POST"])
 def configure():
     try:
         data = request.get_json(force=True)
-        server_config["tools"] = set(data["tools"])
-        server_config["products"] = data.get("products", {})
+        server_config["tools"] = data["tools"]
         server_config["defectdojo"] = data["defectdojo"]
         received_tools.clear()
         log_entries.append({"message": "Configuration updated", "config": data})
@@ -31,8 +38,9 @@ def configure():
         return jsonify({"error": "Configuration failed"}), 500
 
 def ensure_product_exists(name):
-    url = server_config["defectdojo"]["url"].rstrip("/") + "/products/"
-    headers = {"Authorization": f"Token {server_config['defectdojo']['api_key']}"}
+    dojo_url = f"{server_config['defectdojo']['ip']}:{server_config['defectdojo']['port']}"
+    url = dojo_url.rstrip("/") + "/products/"
+    headers = {"Authorization": f"Token {server_config['defectdojo']['token']}"}
     resp = requests.get(url, params={"name": name}, headers=headers)
     if resp.status_code == 200 and resp.json().get("count", 0) > 0:
         return resp.json()["results"][0]["id"]
@@ -45,34 +53,45 @@ def ensure_product_exists(name):
 @app.route("/upload/<tool_id>", methods=["POST"])
 def upload(tool_id):
     try:
+        if tool_id not in server_config["tools"]:
+            msg = f"Unknown tool: {tool_id}"
+            log_error(msg)
+            return jsonify({"error": msg}), 400
+
         if tool_id in received_tools:
+            log_error(f"Tool id {tool_id} already received!")
             return jsonify({"status": "already received"}), 200
 
-        file = request.files["file"]
-        product_name = server_config["products"].get(tool_id, "DefaultProduct")
+        product_name = request.form.get('product_name')
+        if product_name is None:
+            log_error(f"On tool {tool_id} no product_name!")
+            return jsonify({"error": "Failed to ensure product"}), 500
         product_id = ensure_product_exists(product_name)
         if not product_id:
+            log_error(f"On tool {tool_id} product_name not correct!")
             return jsonify({"error": "Failed to ensure product"}), 500
 
         headers = {
-            "Authorization": f"Token {server_config['defectdojo']['api_key']}"
+            "Authorization": f"Token {server_config['defectdojo']['token']}"
         }
-        # Поддержка доп. заголовков
-        user_headers = request.headers.get("X-Forward-Headers")
-        if user_headers:
-            headers.update(json.loads(user_headers))
 
-        scan_data = {
-            "scan_type": server_config["defectdojo"]["scan_type"],
-            "product": product_id,
-            "engagement": None,  # или создать через API, если нужно
-            "active": True,
-            "verified": True
-        }
-        files = {"file": (file.filename, file.stream, file.mimetype)}
-        defectdojo_upload_url = server_config["defectdojo"]["url"].rstrip("/") + "/import-scan/"
+        form_data = request.form.to_dict()
 
-        resp = requests.post(defectdojo_upload_url, headers=headers, data=scan_data, files=files)
+        files = {}
+        for key, file_storage in request.files.items():
+            files[key] = (file_storage.filename, file_storage.stream, file_storage.content_type)
+        # scan_data = {
+        #     "scan_type": data.get("scan_type"),
+        #     "product": product_id,
+        #     "engagement_name": data.get("engagement_name"),  # или создать через API, если нужно
+        #     "active": True,
+        #     "verified": True
+        # }
+        # files = {"file": (file.filename, file.stream, file.mimetype)}
+        dojo_url = f"{server_config['defectdojo']['ip']}:{server_config['defectdojo']['port']}"
+        defectdojo_upload_url = dojo_url.rstrip("/") + "/import-scan/"
+
+        resp = requests.post(defectdojo_upload_url, headers=headers, data=form_data, files=files)
 
         if resp.status_code in [200, 201]:
             received_tools.add(tool_id)
@@ -87,8 +106,12 @@ def upload(tool_id):
 
 @app.route("/status", methods=["GET"])
 def status():
-    remaining = list(server_config["tools"] - received_tools)
-    return jsonify({"waiting_for": remaining})
+    done = all(tool in received_tools for tool in server_config["tools"])
+    return jsonify({
+        "all_received": done,
+        "received": list(received_tools),
+        "remaining": list(set(server_config["tools"]) - received_tools)
+    })
 
 @app.route("/logs", methods=["GET"])
 def logs():
