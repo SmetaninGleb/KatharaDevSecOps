@@ -45,7 +45,12 @@ def ensure_product_exists(name):
     resp = requests.get(url, params={"name": name}, headers=headers)
     if resp.status_code == 200 and resp.json().get("count", 0) > 0:
         return resp.json()["results"][0]["id"]
-    create_resp = requests.post(url, headers=headers, json={"name": name})
+    data = {
+        "name": name,
+        "description": "Created automatically",
+        "prod_type": 0
+    }
+    create_resp = requests.post(url, headers=headers, json=data)
     if create_resp.status_code == 201:
         return create_resp.json()["id"]
     log_error(f"Failed to create product {name}: {create_resp.text}")
