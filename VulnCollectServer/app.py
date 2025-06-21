@@ -40,7 +40,7 @@ def configure():
 
 def ensure_product_exists(name):
     dojo_url = f"http://{server_config['defectdojo']['ip']}:{server_config['defectdojo']['port']}"
-    url = dojo_url.rstrip("/") + "/products/"
+    url = dojo_url.rstrip("/") + "/api/v2/products/"
     headers = {"Authorization": f"Token {server_config['defectdojo']['token']}"}
     resp = requests.get(url, params={"name": name}, headers=headers)
     if resp.status_code == 200 and resp.json().get("count", 0) > 0:
