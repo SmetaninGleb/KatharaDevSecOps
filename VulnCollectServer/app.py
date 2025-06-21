@@ -115,7 +115,7 @@ def status():
 
 @app.route("/logs", methods=["GET"])
 def logs():
-    return jsonify(log_entries[-50:])
+    return jsonify(log_entries)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

@@ -1,0 +1,8 @@
+{
+    "tools": {{ tools | tojson }},
+    "defectdojo": {
+        "ip": "{{ DEFECTDOJO_IP }}",
+        "port": "{{ DEFECTDOJO_PORT }}",
+        "token": "{{ DEFECTDOJO_TOKEN }}"
+    }
+}
