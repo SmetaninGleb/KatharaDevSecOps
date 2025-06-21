@@ -39,7 +39,7 @@ def configure():
         return jsonify({"error": "Configuration failed"}), 500
 
 def ensure_product_exists(name):
-    dojo_url = f"{server_config['defectdojo']['ip']}:{server_config['defectdojo']['port']}"
+    dojo_url = f"http://{server_config['defectdojo']['ip']}:{server_config['defectdojo']['port']}"
     url = dojo_url.rstrip("/") + "/products/"
     headers = {"Authorization": f"Token {server_config['defectdojo']['token']}"}
     resp = requests.get(url, params={"name": name}, headers=headers)
@@ -98,7 +98,7 @@ def upload(tool_id):
             "file_keys": list(files.keys())
         })
 
-        dojo_url = f"{server_config['defectdojo']['ip']}:{server_config['defectdojo']['port']}"
+        dojo_url = f"http://{server_config['defectdojo']['ip']}:{server_config['defectdojo']['port']}"
         defectdojo_upload_url = dojo_url.rstrip("/") + "/import-scan/"
 
         resp = requests.post(defectdojo_upload_url, headers=headers, data=form_data, files=files)
